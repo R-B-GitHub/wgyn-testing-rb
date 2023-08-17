@@ -43,7 +43,6 @@ enum operation {
     MUL, 
     DIV, 
     POW, 
-    LOG, 
     APP, // append
     NUL  // null operation, has no use
 };
@@ -73,20 +72,10 @@ static inline int is_integral(double x)
     return floor(fabs(x)) == fabs(x);
 }
 
-static inline int factorial(int n)
-{
-    int i;
-    int x = 1;
-
-    if(n == 0) return 1;
-    for(i = 1; i <= n; i++)
-        x *= i;
-    return x;
-}
 
 
 
-void print_seq(int sequence[], int fact_array[])
+void print_seq(int sequence[])
 {
     int i;
 
@@ -102,8 +91,6 @@ void print_seq(int sequence[], int fact_array[])
             fprintf(stdout, " /"); break;
         case POW:
             fprintf(stdout, " ^"); break;
-        case LOG:
-            fprintf(stdout, " log"); break;
         case APP:
             fprintf(stdout, " join"); break;
         case NUL:
@@ -112,8 +99,6 @@ void print_seq(int sequence[], int fact_array[])
             fprintf(stdout, " %d", sequence[i]);
         }
 
-        if(fact_array[i])
-            fprintf(stdout, " !");
     }
     fprintf(stdout, "\n");
 }
@@ -122,7 +107,7 @@ std::string print_formatted(int sequence[], int fact_array[])
 {
     int i;
     // Order of operations indicator used to place parentheses
-    // 1=+ or -, 2=* or /, 3=^ or log or !, 4=just a number
+    // 1=+ or -, 2=* or /, 3=^, 4=just a number
     std::deque<int> expr_type; 
     std::deque<std::string> stack;
     std::string str, a, b;
@@ -174,15 +159,6 @@ std::string print_formatted(int sequence[], int fact_array[])
             expr_type.pop_front(); expr_type.pop_front();
             expr_type.push_front(3);
             break;
-        case LOG:
-            a = stack[1];
-            b = expr_type[0] < 4? "(" + stack[0] + ")" : stack[0];
-            str = "log_" + b + "(" + a + ")";
-            stack.pop_front(); stack.pop_front();
-            stack.push_front(str);
-            expr_type.pop_front(); expr_type.pop_front();
-            expr_type.push_front(3);
-            break;
         case APP:
             str = stack[1] + stack[0];
             stack.pop_front(); stack.pop_front();
@@ -197,14 +173,7 @@ std::string print_formatted(int sequence[], int fact_array[])
             expr_type.push_front(4);
         }
 
-        // handle factorials
-        if(fact_array[i]) {
-            str = expr_type[0] < 4? "(" + stack[0] + ")" : stack[0];
-            stack.pop_front();
-            stack.push_front(str + "!");
-            expr_type.pop_front();
-            expr_type.push_front(3);
-        }
+       }
     }
 
     return stack.front();
@@ -245,7 +214,6 @@ void permute_operations(int d1, int d2, int d3, int d4)
 void permute_sequence(int d1, int d2, int d3, int d4, operation o1, operation o2, operation o3)
 {
     int i;
-    int fact_num;
     int fact_array[7];
     int sequence1[] = {d1, d2, o1, d3, o2, d4, o3};
     int sequence2[] = {d1, d2, o1, d3, d4, o2, o3};
@@ -256,17 +224,6 @@ void permute_sequence(int d1, int d2, int d3, int d4, operation o1, operation o2
     // this is how we check over all factorials
     // if we read the 7 number fact_array as a 7 digit binary number
     // we can loop from zero to 2^7 to cover all fact_arrays
-    for(fact_num = 0; fact_num < (1<<7); fact_num++) {
-        for(i = 0; i < 7; i++) {
-            fact_array[i] = (fact_num >> i) & 1;
-        }
-        
-        evaluate(sequence1, fact_array);
-        evaluate(sequence2, fact_array);
-        evaluate(sequence3, fact_array);
-        evaluate(sequence4, fact_array);
-        evaluate(sequence5, fact_array);
-    }
 }
 
 void drop(double *stack, int *stack_info, int *depth)
@@ -276,7 +233,7 @@ void drop(double *stack, int *stack_info, int *depth)
     (*depth)--;
 }
 
-void evaluate(int sequence[], int fact_array[])
+void evaluate(int sequence[])
 {
     int i;
     int n;
@@ -314,11 +271,6 @@ void evaluate(int sequence[], int fact_array[])
             stack_info[1] = 1;
             drop(stack, stack_info, &depth);
             break;
-        case LOG:
-            stack[1] = log(stack[1]) / log(stack[0]);
-            stack_info[1] = 1;
-            drop(stack, stack_info, &depth);
-            break;
         case APP:
             if(stack_info[0] != 0 || stack_info[1] != 0) return; // you can only append "new" numbers
             if(stack[1] == 0) return; // no leading zero
@@ -342,14 +294,6 @@ void evaluate(int sequence[], int fact_array[])
         if(isnan(stack[0])) return;
 
         // Handle factorials
-        if(fact_array[i]) {
-            if(!is_integral(stack[0]))
-                return; // can't factorial non-integral             
-            if((stack[0] < 3 && stack[n] != 0) || stack[0] > 20)
-                return; // factorial bounds
-            stack[0] = (double)factorial((int)stack[0]);
-            stack_info[0] = 1;
-        }
         
      }
 
@@ -360,7 +304,6 @@ void evaluate(int sequence[], int fact_array[])
         solved[n] = 1;
         for(i = 0; i < 7; i++) {
             results[n].sequence[i]   = sequence[i];
-            results[n].fact_array[i] = fact_array[i];
         }
     }
 }
