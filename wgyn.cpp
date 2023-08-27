@@ -52,13 +52,13 @@ enum operation {
 // fact_array: whether or not there is a factorial
 typedef struct {
     int sequence[7];
-    int fact_array[7];
+  #  int fact_array[7];
 } solution;
 
 // just some functions
 void permute_operations(int d1, int d2, int d3, int d4);
 void permute_sequence(int d1, int d2, int d3, int d4, operation o1, operation o2, operation o3);
-void evaluate(int sequence[], int fact_array[]);
+void evaluate(int sequence[]);
 
 // Global variables for the 4 digits and the solutions found
 int      numbers[4];
@@ -103,7 +103,7 @@ void print_seq(int sequence[])
     fprintf(stdout, "\n");
 }
 
-std::string print_formatted(int sequence[], int fact_array[])
+std::string print_formatted(int sequence[])
 {
     int i;
     // Order of operations indicator used to place parentheses
@@ -214,7 +214,6 @@ void permute_operations(int d1, int d2, int d3, int d4)
 void permute_sequence(int d1, int d2, int d3, int d4, operation o1, operation o2, operation o3)
 {
     int i;
-    int fact_array[7];
     int sequence1[] = {d1, d2, o1, d3, o2, d4, o3};
     int sequence2[] = {d1, d2, o1, d3, d4, o2, o3};
     int sequence3[] = {d1, d2, d3, o1, o2, d4, o3};
